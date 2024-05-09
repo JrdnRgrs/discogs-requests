@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import Toast from './Toast'; // Import Toast component
 
 function Collection() {
     const [collection, setCollection] = useState([]);
     const [selectedItem, setSelectedItem] = useState(null);
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(0);
+    const [toast, setToast] = useState({ show: false, message: '' });
 
     useEffect(() => {
         fetch(`http://localhost:4000/api/collection?page=${page}`)
@@ -16,13 +18,23 @@ function Collection() {
             .catch(error => console.error('Error fetching data:', error));
     }, [page]);
 
+    useEffect(() => {
+        if (toast.show) {
+            const timer = setTimeout(() => {
+                setToast({ show: false, message: '' });
+            }, 3000); // Close the toast after 3000 milliseconds (3 seconds)
+
+            return () => clearTimeout(timer); // Cleanup the timer
+        }
+    }, [toast.show]);
+
     const handlePageChange = (newPage) => {
         setPage(newPage);
     };
 
     const handleSubmit = () => {
         if (!selectedItem) {
-            alert("Please select an item from the collection.");
+            setToast({ show: true, message: 'Please select an item from the collection.' });
             return;
         }
         fetch('http://localhost:4000/api/requests', {
@@ -33,8 +45,13 @@ function Collection() {
             body: JSON.stringify({ item: selectedItem })
         })
         .then(response => response.json())
-        .then(() => alert("Request submitted successfully!"))
-        .catch(error => console.error('Error submitting request:', error));
+        .then(() => {
+            setToast({ show: true, message: 'Request submitted successfully!' });
+        })
+        .catch(error => {
+            console.error('Error submitting request:', error);
+            setToast({ show: true, message: 'Error submitting request.' });
+        });
     };
 
     return (
@@ -47,7 +64,6 @@ function Collection() {
                     </button>
                 ))}
             </div>
-            {/* <button onClick={handleSubmit} disabled={!selectedItem}>Submit Selected Item</button> */}
             <ul>
                 {collection.map(item => (
                     <li key={item.id} onClick={() => setSelectedItem(item)} className={selectedItem === item ? 'selected' : ''}>
@@ -66,6 +82,7 @@ function Collection() {
                     Submit Selected Item
                 </button>
             )}
+            <Toast show={toast.show} message={toast.message} onClose={() => setToast({ show: false, message: '' })} />
         </div>
     );
 }

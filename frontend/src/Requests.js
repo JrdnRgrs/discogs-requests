@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import Toast from './Toast'; // Import the Toast component
 
 function Requests() {
     const [requests, setRequests] = useState([]);
     const [selectedRequest, setSelectedRequest] = useState(null);
+    const [toast, setToast] = useState({ show: false, message: '' });
 
     useEffect(() => {
         fetch('http://localhost:4000/api/requests')
@@ -11,9 +13,19 @@ function Requests() {
             .catch(error => console.error('Error fetching requests:', error));
     }, []);
 
-    const handleFulfillRequest = () => {
+    useEffect(() => {
+        if (toast.show) {
+            const timer = setTimeout(() => {
+                setToast({ show: false, message: '' });
+            }, 3000); // Toast disappears after 3 seconds
+
+            return () => clearTimeout(timer);
+        }
+    }, [toast.show]);
+
+    const handleRemoveRequest = (id) => {
         if (!selectedRequest) {
-            alert("Please select a request to fulfill.");
+            setToast({ show: true, message: 'Please select a request to fulfill.' });
             return;
         }
         fetch(`http://localhost:4000/api/requests/${selectedRequest.item.id}`, {
@@ -23,9 +35,12 @@ function Requests() {
         .then(() => {
             setRequests(prev => prev.filter(req => req.item.id !== selectedRequest.item.id));
             setSelectedRequest(null);
-            alert("Request fulfilled and removed");
+            setToast({ show: true, message: 'Request fulfilled and removed' });
         })
-        .catch(error => console.error('Error fulfilling request:', error));
+        .catch(error => {
+            console.error('Error removing request:', error);
+            setToast({ show: true, message: 'Error removing request.' });
+        });
     };
 
     return (
@@ -38,7 +53,12 @@ function Requests() {
                     </li>
                 ))}
             </ul>
-            <button onClick={handleFulfillRequest}>Fulfill Selected Request</button>
+            {selectedRequest && (
+                <button onClick={() => handleRemoveRequest(selectedRequest.item.id)}>Fulfill Selected Request</button>
+            )}
+            {toast.show && (
+                <Toast show={toast.show} message={toast.message} onClose={() => setToast({ show: false, message: '' })} />
+            )}
         </div>
     );
 }

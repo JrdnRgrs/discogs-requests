@@ -39,7 +39,32 @@ li:hover {
 }
 
 .selected {
-    background-color: #f0f0f0; /* Light grey background for selected item */
+    background-color: #4CAF50; /* A darker shade of green */
+
+    padding: 10px;
+    border-radius: 5px; /* Rounded corners for a softer look */
+}
+
+.selected {
+    transform: scale(1.03); /* Slightly larger */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Soft shadow for elevation */
+    transition: transform 0.3s ease, box-shadow 0.3s ease; /* Smooth transition for transform and shadow */
+    padding: 10px;
+}
+.selected {
+    position: relative; /* Needed for absolute positioning of the before element */
+    padding: 10px;
+    background-color: #f0f0f0; /* Light background */
+}
+
+.selected::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 5px;
+    background-color: #4CAF50; /* Green bar on the left */
 }
 
 nav a {
