@@ -9,24 +9,33 @@ function Collection() {
     const [sort, setSort] = useState('artist');
     const [order, setOrder] = useState('asc');
     const [toast, setToast] = useState({ show: false, message: '' });
+    const [rateLimit, setRateLimit] = useState({ remaining: Infinity }); // Assume no limit until we know otherwise
 
     useEffect(() => {
-        //fetch(`http://localhost:4000/api/collection?page=${page}`)
-        fetch(`http://localhost:4000/api/collection?page=${page}&sort=${sort}&sort_order=${order}`)
-            .then(response => response.json())
-            .then(data => {
-                setCollection(data.releases);
-                setTotalPages(data.pagination.pages);
-            })
-            .catch(error => console.error('Error fetching data:', error));
-    }, [page, sort, order]);
-    const handleSortChange = (e) => {
-        setSort(e.target.value);
-    };
+        const fetchData = async () => {
+            try {
+                const response = await fetch(`http://localhost:4000/api/collection?page=${page}&sort=${sort}&sort_order=${order}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    setCollection(data.releases);
+                    setTotalPages(data.pagination.pages);
+                    setRateLimit({
+                        remaining: parseInt(response.headers.get('X-Discogs-Ratelimit-Remaining'), 10)
+                    });
+                } else {
+                    throw new Error('Failed to fetch data.');
+                }
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                if (rateLimit.remaining <= 0) {
+                    setToast({ show: true, message: 'Rate limit exceeded. Please wait a moment.' });
+                }
+            }
+        };
 
-    const handleOrderChange = (e) => {
-        setOrder(e.target.value);
-    };
+        fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [page, sort, order]);
     useEffect(() => {
         if (toast.show) {
             const timer = setTimeout(() => {
@@ -37,6 +46,14 @@ function Collection() {
         }
     }, [toast.show]);
 
+    const handleSortChange = (e) => {
+        setSort(e.target.value);
+    };
+
+    const handleOrderChange = (e) => {
+        setOrder(e.target.value);
+    };
+    
     const handlePageChange = (newPage) => {
         setPage(newPage);
     };
@@ -67,13 +84,6 @@ function Collection() {
         <div>
             <h1>Discogs Collection</h1>
             <div>
-                {Array.from({ length: totalPages }, (_, i) => (
-                    <button key={i} onClick={() => handlePageChange(i + 1)} disabled={page === i + 1}>
-                        {i + 1}
-                    </button>
-                ))}
-            </div>
-            <div>
                 <select value={sort} onChange={handleSortChange}>
                     <option value="artist">Artist</option>
                     <option value="title">Title</option>
@@ -88,6 +98,11 @@ function Collection() {
                     <option value="asc">Ascending</option>
                     <option value="desc">Descending</option>
                 </select>
+                {Array.from({ length: totalPages }, (_, i) => (
+                    <button key={i} onClick={() => handlePageChange(i + 1)} disabled={page === i + 1}>
+                        {i + 1}
+                    </button>
+                ))}
             </div>
             <ul>
                 {collection.map(item => (
@@ -100,6 +115,8 @@ function Collection() {
                                 <strong>Artist:</strong> {item.basic_information.artists.map(artist => artist.name).join(", ")}
                                 <br />
                                 <strong>Year:</strong> {item.basic_information.year}
+                                <br />
+                                <strong>Genres:</strong> {item.basic_information.genres && item.basic_information.genres.join(", ")}
                             </div>
                         </div>
                     </li>

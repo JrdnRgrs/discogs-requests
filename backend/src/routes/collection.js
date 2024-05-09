@@ -1,5 +1,7 @@
 const express = require('express');
 const axios = require('axios');
+const rateLimit = require('./rateLimit');  // Ensure you import the middleware
+
 const router = express.Router();
 
 router.get('/collection', async (req, res) => {
@@ -9,15 +11,31 @@ router.get('/collection', async (req, res) => {
 
     try {
         const url = `https://api.discogs.com/users/jrdnrgrs/collection/folders/0/releases?page=${page}&per_page=50&sort=${sort}&sort_order=${sortOrder}`;
+        // You can use 3 methods
+
+        // Token (signed as user)
         // const response = await axios.get(url, {
         //     headers: { 'Authorization': `Discogs token=${process.env.DISCOGS_API_KEY}` }
         // });
-        const response = await axios.get(url);
+        // App Auth (signed in as app)
+        const response = await axios.get(url, {
+            headers: { 'Authorization': `Discogs key=${process.env.DISCOGS_API_CON_KEY}, secret=${process.env.DISCOGS_API_CON_SECRET}` }
+        });
+        // No Auth (public, no pictures)
+        //const response = await axios.get(url);
+
+        // Discogs rate limits, lets try not to hit it
+        // https://www.discogs.com/developers/#page:home,header:home-rate-limiting
+        res.locals.rateLimitInfo = {
+            total: response.headers['x-discogs-ratelimit'],
+            used: response.headers['x-discogs-ratelimit-used'],
+            remaining: response.headers['x-discogs-ratelimit-remaining']
+        };
         res.json(response.data); // Send the entire response including pagination info
     } catch (error) {
         res.status(500).send('Error retrieving collection from Discogs');
     }
-});
+}, rateLimit);  // Apply the middleware after the API call
 
 
 
