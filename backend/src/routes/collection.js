@@ -3,12 +3,12 @@ const axios = require('axios');
 const router = express.Router();
 
 router.get('/collection', async (req, res) => {
+    const page = req.query.page || 1; // Default to page 1 if no page query parameter is provided
     try {
-        const response = await axios.get('https://api.discogs.com/users/jrdnrgrs/collection/folders/0/releases', {
+        const response = await axios.get(`https://api.discogs.com/users/jrdnrgrs/collection/folders/0/releases?page=${page}&per_page=50`, {
             headers: { 'Authorization': `Discogs token=${process.env.DISCOGS_API_KEY}` }
         });
-        res.json(response.data.releases);
-        //res.json(response.data);
+        res.json(response.data); // Send the entire response including pagination info
     } catch (error) {
         res.status(500).send('Error retrieving collection from Discogs');
     }
