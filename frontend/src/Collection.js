@@ -6,18 +6,27 @@ function Collection() {
     const [selectedItem, setSelectedItem] = useState(null);
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(0);
+    const [sort, setSort] = useState('artist');
+    const [order, setOrder] = useState('asc');
     const [toast, setToast] = useState({ show: false, message: '' });
 
     useEffect(() => {
-        fetch(`http://localhost:4000/api/collection?page=${page}`)
+        //fetch(`http://localhost:4000/api/collection?page=${page}`)
+        fetch(`http://localhost:4000/api/collection?page=${page}&sort=${sort}&sort_order=${order}`)
             .then(response => response.json())
             .then(data => {
                 setCollection(data.releases);
                 setTotalPages(data.pagination.pages);
             })
             .catch(error => console.error('Error fetching data:', error));
-    }, [page]);
+    }, [page, sort, order]);
+    const handleSortChange = (e) => {
+        setSort(e.target.value);
+    };
 
+    const handleOrderChange = (e) => {
+        setOrder(e.target.value);
+    };
     useEffect(() => {
         if (toast.show) {
             const timer = setTimeout(() => {
@@ -64,15 +73,34 @@ function Collection() {
                     </button>
                 ))}
             </div>
+            <div>
+                <select value={sort} onChange={handleSortChange}>
+                    <option value="artist">Artist</option>
+                    <option value="title">Title</option>
+                    <option value="year">Year</option>
+                    <option value="label">Label</option>
+                    <option value="catno">Catalog Number</option>
+                    <option value="format">Format</option>
+                    <option value="rating">Rating</option>
+                    <option value="added">Added Date</option>
+                </select>
+                <select value={order} onChange={handleOrderChange}>
+                    <option value="asc">Ascending</option>
+                    <option value="desc">Descending</option>
+                </select>
+            </div>
             <ul>
                 {collection.map(item => (
                     <li key={item.id} onClick={() => setSelectedItem(item)} className={selectedItem === item ? 'selected' : ''}>
-                        <div>
-                            <strong>Title:</strong> {item.basic_information.title}
-                            <br />
-                            <strong>Artist:</strong> {item.basic_information.artists.map(artist => artist.name).join(", ")}
-                            <br />
-                            <img src={item.basic_information.cover_image || 'http://placehold.it/100x100'} alt="Album Cover" style={{ height: '100px' }} />
+                        <div className="item-container">
+                            <img src={item.basic_information.cover_image || 'http://placehold.it/100x100'} alt="Album Cover" className="album-cover" />
+                            <div className="item-info">
+                                <strong>Title:</strong> {item.basic_information.title}
+                                <br />
+                                <strong>Artist:</strong> {item.basic_information.artists.map(artist => artist.name).join(", ")}
+                                <br />
+                                <strong>Year:</strong> {item.basic_information.year}
+                            </div>
                         </div>
                     </li>
                 ))}

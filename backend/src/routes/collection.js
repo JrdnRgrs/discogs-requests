@@ -4,15 +4,21 @@ const router = express.Router();
 
 router.get('/collection', async (req, res) => {
     const page = req.query.page || 1; // Default to page 1 if no page query parameter is provided
+    const sort = req.query.sort || 'artist'; // Default sorting by artist if not specified
+    const sortOrder = req.query.sort_order || 'asc'; // Default sorting order if not specified
+
     try {
-        const response = await axios.get(`https://api.discogs.com/users/jrdnrgrs/collection/folders/0/releases?page=${page}&per_page=50`, {
-            headers: { 'Authorization': `Discogs token=${process.env.DISCOGS_API_KEY}` }
-        });
+        const url = `https://api.discogs.com/users/jrdnrgrs/collection/folders/0/releases?page=${page}&per_page=50&sort=${sort}&sort_order=${sortOrder}`;
+        // const response = await axios.get(url, {
+        //     headers: { 'Authorization': `Discogs token=${process.env.DISCOGS_API_KEY}` }
+        // });
+        const response = await axios.get(url);
         res.json(response.data); // Send the entire response including pagination info
     } catch (error) {
         res.status(500).send('Error retrieving collection from Discogs');
     }
 });
+
 
 
 const requests = [];  // This will store our requests in memory
