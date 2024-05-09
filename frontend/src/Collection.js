@@ -47,6 +47,7 @@ function Collection() {
                     </button>
                 ))}
             </div>
+            {/* <button onClick={handleSubmit} disabled={!selectedItem}>Submit Selected Item</button> */}
             <ul>
                 {collection.map(item => (
                     <li key={item.id} onClick={() => setSelectedItem(item)} className={selectedItem === item ? 'selected' : ''}>
@@ -60,7 +61,11 @@ function Collection() {
                     </li>
                 ))}
             </ul>
-            <button onClick={handleSubmit} disabled={!selectedItem}>Submit Selected Item</button>
+            {selectedItem && (
+                <button className="submit-button" onClick={handleSubmit}>
+                    Submit Selected Item
+                </button>
+            )}
         </div>
     );
 }
