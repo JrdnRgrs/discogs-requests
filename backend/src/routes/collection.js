@@ -28,18 +28,18 @@ router.get('/collection', async (req, res) => {
 
         // 4. npm library js_ts_discogs_api_v2_library
         const client = new Client({
-            token: process.env.DISCOGS_API_TOKEN,
-            discogsUserName: process.env.DISCOGS_USER_NAME,
+            // settings are set in .env
         });
 
         const response = await client.getUserFolderContents('0', page, sort, sortOrder);
 
         // Discogs rate limits, lets try not to hit it
         // https://www.discogs.com/developers/#page:home,header:home-rate-limiting
+        const rateLimitInfo = discogs.getRatelimit();
         res.locals.rateLimitInfo = {
-            total: response.headers['x-discogs-ratelimit'],
-            used: response.headers['x-discogs-ratelimit-used'],
-            remaining: response.headers['x-discogs-ratelimit-remaining']
+            total: rateLimitInfo.ratelimit,
+            used: rateLimitInfo.used,
+            remaining: rateLimitInfo.remaining
         };
         res.json(response.data); // Send the entire response including pagination info
     } catch (error) {
