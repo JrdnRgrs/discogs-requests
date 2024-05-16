@@ -2,7 +2,7 @@ const express = require('express');
 const fs = require('fs');
 const path = require('path');
 const axios = require('axios');
-const rateLimit = require('../rateLimit');
+//const rateLimit = require('../rateLimit');
 const Dotenv = require('dotenv');
 const Client = require('js_ts_discogs_api_v2_library').default;
 Dotenv.config();
