@@ -36,7 +36,7 @@ const fetchCollectionFromDiscogs = async () => {
 };
 
 router.get('/collection', async (req, res) => {
-    const page = req.query.page || 1;
+    const page = parseInt(req.query.page) || 1;
     const sort = req.query.sort || 'artist';
     const sortOrder = req.query.sort_order || 'asc';
 
@@ -49,10 +49,20 @@ router.get('/collection', async (req, res) => {
 
     // Implement sorting on collectionData
     const sortedCollection = collectionData.releases.sort((a, b) => {
-        if (sortOrder === 'asc') {
-            return a.basic_information[sort] > b.basic_information[sort] ? 1 : -1;
+        let aValue, bValue;
+
+        if (sort === 'artist') {
+            aValue = a.basic_information.artists[0].name.toLowerCase();
+            bValue = b.basic_information.artists[0].name.toLowerCase();
         } else {
-            return a.basic_information[sort] < b.basic_information[sort] ? 1 : -1;
+            aValue = a.basic_information[sort] || '';
+            bValue = b.basic_information[sort] || '';
+        }
+
+        if (sortOrder === 'asc') {
+            return aValue > bValue ? 1 : -1;
+        } else {
+            return aValue < bValue ? 1 : -1;
         }
     });
 

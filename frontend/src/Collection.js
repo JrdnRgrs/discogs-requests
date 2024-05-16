@@ -20,7 +20,13 @@ function Collection() {
                 const response = await fetch(`http://localhost:4000/api/collection?page=${page}&sort=${sort}&sort_order=${order}`);
                 if (response.ok) {
                     const data = await response.json();
-                    setCollection(data.releases);
+                    // Filter out duplicates
+                    const uniqueReleases = data.releases.filter((item, index, self) =>
+                        index === self.findIndex((t) => (
+                            t.id === item.id
+                        ))
+                    );
+                    setCollection(uniqueReleases);
                     setTotalPages(data.pagination.pages);
                     setRateLimit({
                         remaining: parseInt(response.headers.get('X-Discogs-Ratelimit-Remaining'), 10)
@@ -52,10 +58,12 @@ function Collection() {
 
     const handleSortChange = (e) => {
         setSort(e.target.value);
+        setPage(1); // Reset to first page when sort changes
     };
 
     const handleOrderChange = (e) => {
         setOrder(e.target.value);
+        setPage(1); // Reset to first page when order changes
     };
     
     const handlePageChange = (newPage) => {
@@ -110,7 +118,7 @@ function Collection() {
             </div>
             <ul>
                 {collection.map(item => (
-                    <li key={item.id} onClick={() => setSelectedItem(item)} className={selectedItem === item ? 'selected' : ''}>
+                    <li key={`${item.id}-${item.basic_information.title}`} onClick={() => setSelectedItem(item)} className={selectedItem === item ? 'selected' : ''}>
                         <div className="item-container">
                             <img src={item.basic_information.cover_image || 'http://placehold.it/100x100'} alt="Album Cover" className="album-cover" />
                             <div className="item-info">
