@@ -1,17 +1,16 @@
-require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
-const app = express();
+const Dotenv = require('dotenv');
 const collectionRoutes = require('./routes/collection');
 
-const PORT = process.env.PORT || 4000;
+Dotenv.config();
+const app = express();
+const port = process.env.PORT || 4000;
 
-// Enable CORS
 app.use(cors());
-
 app.use(express.json());
 app.use('/api', collectionRoutes);
 
-app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
+app.listen(port, () => {
+    console.log(`Server is running on port ${port}`);
 });

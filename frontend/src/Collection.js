@@ -14,6 +14,9 @@ function Collection() {
     useEffect(() => {
         const fetchData = async () => {
             try {
+                // Reset collection state before fetching new data
+                setCollection([]);
+                
                 const response = await fetch(`http://localhost:4000/api/collection?page=${page}&sort=${sort}&sort_order=${order}`);
                 if (response.ok) {
                     const data = await response.json();
@@ -36,6 +39,7 @@ function Collection() {
         fetchData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [page, sort, order]);
+
     useEffect(() => {
         if (toast.show) {
             const timer = setTimeout(() => {
