@@ -1,0 +1,24 @@
+services:
+  backend:
+    build:
+      context: ./backend
+    ports:
+      - "4000:4000"
+    volumes:
+      - ./backend/src/routes/collection.json:/usr/src/app/routes/collection.json
+    environment:
+      - DISCOGS_API_TOKEN
+      - DISCOGS_USER_NAME
+      - DISCOGS_PER_PAGE
+
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "3000:3000"
+    #volumes:
+      #- ./frontend:/usr/src/app
+    #environment:
+    #  - NODE_ENV=development
+    depends_on:
+      - backend
