@@ -5,6 +5,10 @@ function Requests() {
     const [requests, setRequests] = useState([]);
     const [selectedRequest, setSelectedRequest] = useState(null);
     const [toast, setToast] = useState({ show: false, message: '' });
+    const [lastUpdated, setLastUpdated] = useState(null);
+    const [lastAddedDate, setLastAddedDate] = useState(null);
+    const [collectionValue, setCollectionValue] = useState(null);
+    const [numberOfItems, setNumberOfItems] = useState(null);
 
     useEffect(() => {
         fetch('http://localhost:4000/api/requests')
@@ -42,7 +46,27 @@ function Requests() {
             setToast({ show: true, message: 'Error removing request.' });
         });
     };
-
+    const handleUpdate = async () => {
+        try {
+            const response = await fetch('http://localhost:4000/api/update', {
+                method: 'POST'
+            });
+            if (response.ok) {
+                const data = await response.json();
+                //const updatedRelease = data.data.releases
+                setToast({ show: true, message: 'Collection updated successfully!' });
+                setLastUpdated(data.lastUpdated);
+                setLastAddedDate(data.lastAddedDate);
+                setCollectionValue(data.collectionValue);
+                setNumberOfItems(data.numberOfItems);
+            } else {
+                throw new Error('Failed to update collection.');
+            }
+        } catch (error) {
+            console.error('Error updating collection:', error);
+            setToast({ show: true, message: 'Error updating collection.' });
+        }
+    };
     return (
         <div>
             <h1>Active Requests</h1>
@@ -58,6 +82,22 @@ function Requests() {
             )}
             {toast.show && (
                 <Toast show={toast.show} message={toast.message} onClose={() => setToast({ show: false, message: '' })} />
+            )}
+            <h1>Collection Settings</h1>
+            <button className="update-button" onClick={handleUpdate}>
+                Update Collection
+            </button>
+            {numberOfItems && (
+                <p>Number of Items in Collection: {numberOfItems}</p>
+            )}
+            {collectionValue && (
+                <p>Median Collection Value: {collectionValue}</p>
+            )}
+            {lastUpdated && (
+                <p>Last updated: {new Date(lastUpdated).toLocaleString()}</p>
+            )}
+            {lastAddedDate && (
+                <p>Last item added on: {lastAddedDate}</p>
             )}
         </div>
     );

@@ -18,13 +18,31 @@ const fetchCollectionFromDiscogs = async () => {
     let page = 1;
     let totalPages = 1;
     let allReleases = [];
+    const itemsPerPage = 500; // Set the number of items per request to 500
+
+    console.log('Starting to fetch collection from Discogs');
 
     while (page <= totalPages) {
-        const response = await client.getUserFolderContents('0', page, 'artist', 'asc');
+        console.log(`Fetching page ${page} of ${totalPages}`);
+        
+        // Fetch rate limit information
+        const rateLimitInfo = await client.getRatelimit();
+        console.log(`Rate limit remaining: ${rateLimitInfo.remaining}`);
+
+        // If rate limit is low, wait for the window to reset
+        if (rateLimitInfo.remaining <= 1) {
+            const waitTime = (rateLimitInfo.reset * 1000) - Date.now();
+            console.log(`Rate limit exceeded. Waiting for ${waitTime} ms`);
+            await new Promise(resolve => setTimeout(resolve, waitTime));
+        }
+
+        const response = await client.getUserFolderContents('0', page, 'artist', 'asc', itemsPerPage);
         allReleases = allReleases.concat(response.data.releases);
         totalPages = response.data.pagination.pages;
         page++;
     }
+
+    console.log('Finished fetching collection from Discogs');
 
     const collectionData = {
         releases: allReleases,
@@ -32,7 +50,32 @@ const fetchCollectionFromDiscogs = async () => {
     };
 
     fs.writeFileSync(COLLECTION_FILE_PATH, JSON.stringify(collectionData, null, 2));
-    return collectionData;
+
+    // Log the number of items in the collection
+    const numberOfItems = allReleases.length;
+    console.log(`Items in Collection: ${numberOfItems}`);
+
+    // Get and log the collection value
+    const userValue = await client.getUserCollectionValue();
+    console.log(`Collection value: ${userValue.data.median}`);
+
+    // Log the update time
+    //console.log(`Update happened at: ${new Date().toISOString()}`);
+
+    // Find the last added date
+    const lastAddedDate = allReleases.reduce((latest, release) => {
+        const addedDate = new Date(release.date_added);
+        return addedDate > latest ? addedDate : latest;
+    }, new Date(0));
+    const collectionValue = userValue.data.median
+    // Format the last added date to CST
+    const formattedLastAddedDate = lastAddedDate.toLocaleString('en-US', { timeZone: 'America/Chicago' });
+    // Format the last added date to a more readable format
+    //const formattedLastAddedDate = lastAddedDate.toLocaleString();
+
+    console.log(`Last added date in collection: ${formattedLastAddedDate}`);
+
+    return { collectionData, formattedLastAddedDate, collectionValue, numberOfItems };
 };
 
 router.get('/collection', async (req, res) => {
@@ -82,8 +125,17 @@ router.get('/collection', async (req, res) => {
 
 router.post('/update', async (req, res) => {
     try {
-        const collectionData = await fetchCollectionFromDiscogs();
-        res.status(200).json({ message: 'Collection updated successfully', data: collectionData });
+        const { collectionData, formattedLastAddedDate, collectionValue, numberOfItems } = await fetchCollectionFromDiscogs();
+        const lastUpdated = collectionData.lastUpdated.toLocaleString('en-US', { timeZone: 'America/Chicago' });
+        console.log(`Collection updated successfully at: ${lastUpdated}`);
+        res.status(200).json({ 
+            message: 'Collection updated successfully', 
+            data: collectionData,
+            lastUpdated: lastUpdated,
+            lastAddedDate: formattedLastAddedDate,
+            collectionValue: collectionValue,
+            numberOfItems: numberOfItems
+        });
     } catch (error) {
         res.status(500).json({ message: 'Failed to update collection' });
     }

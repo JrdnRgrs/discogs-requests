@@ -10,6 +10,8 @@ function Collection() {
     const [order, setOrder] = useState('asc');
     const [toast, setToast] = useState({ show: false, message: '' });
     const [rateLimit, setRateLimit] = useState({ remaining: Infinity }); // Assume no limit until we know otherwise
+    // const [lastUpdated, setLastUpdated] = useState(null);
+    // const [lastAddedDate, setLastAddedDate] = useState(null);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -92,6 +94,26 @@ function Collection() {
         });
     };
 
+    // update button has been moved to requests
+    // const handleUpdate = async () => {
+    //     try {
+    //         const response = await fetch('http://localhost:4000/api/update', {
+    //             method: 'POST'
+    //         });
+    //         if (response.ok) {
+    //             const data = await response.json();
+    //             setToast({ show: true, message: 'Collection updated successfully!' });
+    //             setLastUpdated(data.lastUpdated);
+    //             setLastAddedDate(data.lastAddedDate);
+    //         } else {
+    //             throw new Error('Failed to update collection.');
+    //         }
+    //     } catch (error) {
+    //         console.error('Error updating collection:', error);
+    //         setToast({ show: true, message: 'Error updating collection.' });
+    //     }
+    // };
+
     return (
         <div>
             <h1>Discogs Collection</h1>
@@ -139,6 +161,17 @@ function Collection() {
                     Submit Selected Item
                 </button>
             )}
+            {/* Update button, moved to Requests for now
+            <button className="update-button" onClick={handleUpdate}>
+                Update Collection
+            </button>
+            {lastUpdated && (
+                <p>Last updated: {new Date(lastUpdated).toLocaleString()}</p>
+            )}
+            {lastAddedDate && (
+                <p>Last item added on: {lastAddedDate}</p>
+            )} 
+            */}
             <Toast show={toast.show} message={toast.message} onClose={() => setToast({ show: false, message: '' })} />
         </div>
     );
