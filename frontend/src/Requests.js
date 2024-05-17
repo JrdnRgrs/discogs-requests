@@ -9,9 +9,9 @@ function Requests() {
     const [lastAddedDate, setLastAddedDate] = useState(null);
     const [collectionValue, setCollectionValue] = useState(null);
     const [numberOfItems, setNumberOfItems] = useState(null);
-
+    const API_HOST = process.env.REACT_APP_API_URL
     useEffect(() => {
-        fetch('http://localhost:4000/api/requests')
+        fetch(`${API_HOST}/api/requests`)
             .then(response => response.json())
             .then(data => setRequests(data))
             .catch(error => console.error('Error fetching requests:', error));
@@ -32,7 +32,7 @@ function Requests() {
             setToast({ show: true, message: 'Please select a request to fulfill.' });
             return;
         }
-        fetch(`http://localhost:4000/api/requests/${selectedRequest.item.id}`, {
+        fetch(`${API_HOST}/api/requests/${selectedRequest.item.id}`, {
             method: 'DELETE'
         })
         .then(response => response.json())
@@ -48,7 +48,7 @@ function Requests() {
     };
     const handleUpdate = async () => {
         try {
-            const response = await fetch('http://localhost:4000/api/update', {
+            const response = await fetch(`${API_HOST}/api/update`, {
                 method: 'POST'
             });
             if (response.ok) {

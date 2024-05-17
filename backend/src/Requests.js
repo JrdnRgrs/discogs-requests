@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 
 function Requests() {
     const [requests, setRequests] = useState([]);
-
+    const API_HOST = process.env.REACT_APP_API_URL
     useEffect(() => {
-        fetch('http://localhost:4000/api/requests')
+        fetch(`${API_HOST}/api/requests`)
             .then(response => response.json())
             .then(data => setRequests(data))
             .catch(error => console.error('Error fetching requests:', error));

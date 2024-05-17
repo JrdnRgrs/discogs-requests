@@ -11,6 +11,7 @@ function Collection() {
     const [toast, setToast] = useState({ show: false, message: '' });
     const [rateLimit, setRateLimit] = useState({ remaining: Infinity }); // Assume no limit until we know otherwise
 
+    const API_HOST = process.env.REACT_APP_API_URL
 
     useEffect(() => {
         const fetchData = async () => {
@@ -18,7 +19,7 @@ function Collection() {
                 // Reset collection state before fetching new data
                 setCollection([]);
                 
-                const response = await fetch(`http://localhost:4000/api/collection?page=${page}&sort=${sort}&sort_order=${order}`);
+                const response = await fetch(`${API_HOST}/api/collection?page=${page}&sort=${sort}&sort_order=${order}`);
                 if (response.ok) {
                     const data = await response.json();
                     // Filter out duplicates
@@ -76,7 +77,7 @@ function Collection() {
             setToast({ show: true, message: 'Please select an item from the collection.' });
             return;
         }
-        fetch('http://localhost:4000/api/requests', {
+        fetch(`${API_HOST}/api/requests`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
