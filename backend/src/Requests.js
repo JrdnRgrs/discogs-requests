@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
-
+const api_url = process.env.REACT_APP_API_HOST;
+const api_protocol = process.env.REACT_APP_API_PROTOCOL;
+const api_port = process.env.REACT_APP_API_PORT;
+const API_HOST = `${api_protocol}://${api_url}:${api_port}`
 function Requests() {
     const [requests, setRequests] = useState([]);
-    const API_HOST = process.env.REACT_APP_API_URL
+    //const API_HOST = process.env.REACT_APP_API_URL
     useEffect(() => {
         fetch(`${API_HOST}/api/requests`)
             .then(response => response.json())

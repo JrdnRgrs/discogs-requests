@@ -5,8 +5,10 @@ const axios = require('axios');
 //const rateLimit = require('../rateLimit');
 const Dotenv = require('dotenv');
 const Client = require('js_ts_discogs_api_v2_library').default;
+const pool = require('../db'); // Import the database connection
 Dotenv.config();
 const router = express.Router();
+
 
 const COLLECTION_FILE_PATH = path.join(__dirname, 'collection.json');
 
@@ -143,26 +145,68 @@ router.post('/update', async (req, res) => {
 
 const requests = [];  // This will store our requests in memory
 
-router.post('/requests', (req, res) => {
+// router.post('/requests', (req, res) => {
+//     const request = req.body;
+//     requests.push(request);  // Store the request
+//     console.log('Received request:', request);
+//     res.status(200).json({ message: 'Request received' });
+// });
+
+// router.get('/requests', (req, res) => {
+//     res.status(200).json(requests);  // Send all requests
+// });
+
+// // Endpoint to delete a request
+// router.delete('/requests/:id', (req, res) => {
+//     const { id } = req.params; // Get the ID from the URL
+//     const index = requests.findIndex(req => req.item.id.toString() === id);
+//     if (index > -1) {
+//         requests.splice(index, 1); // Remove the item from the array
+//         res.status(200).json({ message: 'Request fulfilled and removed' });
+//     } else {
+//         res.status(404).send('Request not found');
+//     }
+// });
+// Update the POST /requests endpoint to store requests in the database
+router.post('/requests', async (req, res) => {
     const request = req.body;
-    requests.push(request);  // Store the request
-    console.log('Received request:', request);
-    res.status(200).json({ message: 'Request received' });
+    try {
+        const result = await pool.query(
+            'INSERT INTO requests (item) VALUES ($1) RETURNING *',
+            [request.item]
+        );
+        console.log('Received request:', result.rows[0]);
+        res.status(200).json({ message: 'Request received', request: result.rows[0] });
+    } catch (error) {
+        console.error('Error storing request:', error);
+        res.status(500).json({ message: 'Failed to store request' });
+    }
 });
 
-router.get('/requests', (req, res) => {
-    res.status(200).json(requests);  // Send all requests
+// Update the GET /requests endpoint to retrieve requests from the database
+router.get('/requests', async (req, res) => {
+    try {
+        const result = await pool.query('SELECT * FROM requests ORDER BY created_at DESC');
+        res.status(200).json(result.rows);
+    } catch (error) {
+        console.error('Error fetching requests:', error);
+        res.status(500).json({ message: 'Failed to fetch requests' });
+    }
 });
 
-// Endpoint to delete a request
-router.delete('/requests/:id', (req, res) => {
-    const { id } = req.params; // Get the ID from the URL
-    const index = requests.findIndex(req => req.item.id.toString() === id);
-    if (index > -1) {
-        requests.splice(index, 1); // Remove the item from the array
-        res.status(200).json({ message: 'Request fulfilled and removed' });
-    } else {
-        res.status(404).send('Request not found');
+// Update the DELETE /requests/:id endpoint to delete requests from the database
+router.delete('/requests/:id', async (req, res) => {
+    const { id } = req.params; // Get the database ID from the URL
+    try {
+        const result = await pool.query('DELETE FROM requests WHERE id = $1 RETURNING *', [id]);
+        if (result.rowCount > 0) {
+            res.status(200).json({ message: 'Request fulfilled and removed', request: result.rows[0] });
+        } else {
+            res.status(404).json({ message: 'Request not found' });
+        }
+    } catch (error) {
+        console.error('Error deleting request:', error);
+        res.status(500).json({ message: 'Failed to delete request' });
     }
 });
 

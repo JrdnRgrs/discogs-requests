@@ -9,13 +9,20 @@ function Requests() {
     const [lastAddedDate, setLastAddedDate] = useState(null);
     const [collectionValue, setCollectionValue] = useState(null);
     const [numberOfItems, setNumberOfItems] = useState(null);
-    const API_HOST = process.env.REACT_APP_API_URL
+    //const API_HOST = process.env.REACT_APP_API_URL;
+    const api_url = process.env.REACT_APP_API_HOST;
+    const api_protocol = process.env.REACT_APP_API_PROTOCOL;
+    const api_port = process.env.REACT_APP_API_PORT;
+    const API_HOST = `${api_protocol}://${api_url}:${api_port}`
     useEffect(() => {
         fetch(`${API_HOST}/api/requests`)
             .then(response => response.json())
-            .then(data => setRequests(data))
+            .then(data => {
+                console.log('Fetched requests:', data); // Log the response data
+                setRequests(Array.isArray(data) ? data : []); // Ensure requests is an array
+            })
             .catch(error => console.error('Error fetching requests:', error));
-    }, []);
+    }, [API_HOST]);
 
     useEffect(() => {
         if (toast.show) {
@@ -27,17 +34,17 @@ function Requests() {
         }
     }, [toast.show]);
 
-    const handleRemoveRequest = (id) => {
+    const handleRemoveRequest = () => {
         if (!selectedRequest) {
             setToast({ show: true, message: 'Please select a request to fulfill.' });
             return;
         }
-        fetch(`${API_HOST}/api/requests/${selectedRequest.item.id}`, {
+        fetch(`${API_HOST}/api/requests/${selectedRequest.id}`, {
             method: 'DELETE'
         })
         .then(response => response.json())
         .then(() => {
-            setRequests(prev => prev.filter(req => req.item.id !== selectedRequest.item.id));
+            setRequests(prev => prev.filter(req => req.id !== selectedRequest.id));
             setSelectedRequest(null);
             setToast({ show: true, message: 'Request fulfilled and removed' });
         })
@@ -46,6 +53,7 @@ function Requests() {
             setToast({ show: true, message: 'Error removing request.' });
         });
     };
+
     const handleUpdate = async () => {
         try {
             const response = await fetch(`${API_HOST}/api/update`, {
@@ -53,7 +61,6 @@ function Requests() {
             });
             if (response.ok) {
                 const data = await response.json();
-                //const updatedRelease = data.data.releases
                 setToast({ show: true, message: 'Collection updated successfully!' });
                 setLastUpdated(data.lastUpdated);
                 setLastAddedDate(data.lastAddedDate);
@@ -67,6 +74,7 @@ function Requests() {
             setToast({ show: true, message: 'Error updating collection.' });
         }
     };
+
     return (
         <div>
             <h1>Active Requests</h1>

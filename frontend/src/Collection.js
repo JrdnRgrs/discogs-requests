@@ -11,8 +11,10 @@ function Collection() {
     const [toast, setToast] = useState({ show: false, message: '' });
     const [rateLimit, setRateLimit] = useState({ remaining: Infinity }); // Assume no limit until we know otherwise
 
-    const API_HOST = process.env.REACT_APP_API_URL
-
+    const api_url = process.env.REACT_APP_API_HOST;
+    const api_protocol = process.env.REACT_APP_API_PROTOCOL;
+    const api_port = process.env.REACT_APP_API_PORT;
+    const API_HOST = `${api_protocol}://${api_url}:${api_port}`
     useEffect(() => {
         const fetchData = async () => {
             try {

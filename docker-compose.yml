@@ -1,24 +1,88 @@
 services:
   backend:
+    container_name: dr_backend
+    #networks:
+    #  - discogs_default
+      #- shared
     build:
       context: ./backend
     ports:
       - "4000:4000"
+    links:
+      - "db:dr_db"
     volumes:
-      - ./backend/src/routes/collection.json:/usr/src/app/routes/collection.json
+      #- /home/dartmouth/docker/discogs-requests/backend/src/routes/collection.json:/usr/src/app/routes/collection.json
+      - C:\git-home\discogs-requests\backend\src\routes\collection.json:/usr/src/app/routes/collection.json
+      #- /home/dartmouth/docker/discogs-requests/backend/src/app.js:/usr/src/app/app.js
     environment:
       - DISCOGS_API_TOKEN
       - DISCOGS_USER_NAME
       - DISCOGS_PER_PAGE
+      - REACT_APP_API_URL
+      - ALLOWED_ORIGIN
+      - GOOGLE_CLIENT_ID
+      - GOOGLE_CLIENT_SECRET
+      - DATABASE_URL
+      - DB_USER
+      - DB_PASS
+      - DB_HOST
+      - DB_PORT
+      - DB_NAME
+      - REACT_APP_API_PROTOCOL
+      - REACT_APP_API_PORT
+      - REACT_APP_API_HOST
+    depends_on:
+      - db
 
   frontend:
+    container_name: dr_frontend
+    #networks:
+      #- shared
+    #  - discogs_default
     build:
       context: ./frontend
-    ports:
-      - "3000:3000"
     #volumes:
-      #- ./frontend:/usr/src/app
-    #environment:
-    #  - NODE_ENV=development
+      #- /home/dartmouth/docker/discogs-requests/frontend/src/Collection.js:/usr/src/app/src/Collection.js
+    environment:
+      - GOOGLE_CLIENT_ID
+      - GOOGLE_CLIENT_SECRET
+      - REACT_APP_API_URL
+      - ALLOWED_ORIGIN
+      - REACT_APP_API_PROTOCOL
+      - REACT_APP_API_PORT
+      - REACT_APP_API_HOST
+    ports:
+      - "80:3000"
+    links:
+      - "db:database"
+      - "backend:dr_backend"
     depends_on:
+      - db
       - backend
+
+  db:
+    container_name: dr_db
+    #networks:
+    #  - discogs_default
+    image: postgres
+    volumes:
+      - discogs-requests_db:/var/lib/postgresql/data
+      #- requests-db:/var/lib/postgresql/data
+      - C:\git-home\discogs-requests\database\scripts\:/docker-entrypoint-initdb.d/
+      #- /home/dartmouth/docker/discogs-requests/database/scripts/:/docker-entrypoint-initdb.d/
+    environment:
+      - POSTGRES_USER
+      - POSTGRES_PASSWORD
+    ports:
+      - "5432:5432"
+    #depends_on:
+    #  - backend
+
+#networks:
+#  discogs_default:
+#   shared:
+#       external:
+#         name: shared
+
+volumes:
+  discogs-requests_db:
